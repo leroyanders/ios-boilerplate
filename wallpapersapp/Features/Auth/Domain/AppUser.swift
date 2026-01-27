@@ -1,4 +1,4 @@
-struct AppUser: Identifiable {
+struct AppUser: Identifiable, AppUserProtocol {
 	var id: String
 	var email: String
 	var token: String
@@ -23,17 +23,8 @@ struct AppUser: Identifiable {
 	}
 }
 
-protocol UserPersistable {
-	var id: String { get }
-	var email: String { get }
-	var token: String { get }
-	var name: String { get }
-	var lastName: String { get }
-	var image: String { get }
-}
-
 extension AppUser {
-	init(from persistable: UserPersistable) {
+	init(from persistable: AppUserProtocol) {
 		self.id = persistable.id
 		self.email = persistable.email
 		self.token = persistable.token

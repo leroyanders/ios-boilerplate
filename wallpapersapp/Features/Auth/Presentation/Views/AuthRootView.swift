@@ -2,143 +2,126 @@ import SwiftUI
 import PhotosUI
 
 struct AuthRootView: View {
-	@State var nameText: String = ""
-	@State var surnameText: String = ""
-	@State var emailText: String = ""
-	@State var passwordText: String = ""
-	@State var avatar: UIImage?
+	@State private var nameText = ""
+	@State private var surnameText = ""
+	@State private var emailText = ""
+	@State private var passwordText = ""
+	@State private var avatar: UIImage?
 	
 	@Environment(\.dismiss) private var dismiss
 	@Environment(AuthViewModel.self) private var model
 	
+	private var isSignUp: Bool { model.authFlow == .signUp }
+	private var isFormValid: Bool {
+		let isEmailValid = !emailText.isEmpty && emailText.contains("@")
+		let isPasswordValid = !passwordText.isEmpty && passwordText.count >= 6
+		
+		if isSignUp {
+			return isEmailValid &&
+			isPasswordValid &&
+			!nameText.isEmpty &&
+			!surnameText.isEmpty
+		} else {
+			return isEmailValid && isPasswordValid
+		}
+	}
+	
 	var body: some View {
 		NavigationStack {
-			VStack(alignment: .leading) {
-				AuthHeaderView(authFlow: model.authFlow, avatar: $avatar).frame(maxWidth: .infinity)
-				
-				if let error = model.errorMessage {
-					VStack {
+			ScrollView {
+				VStack(alignment: .center) {
+					AuthHeaderView(authFlow: model.authFlow, avatar: $avatar)
+						.frame(maxWidth: .infinity)
+					
+					if let error = model.errorMessage {
 						Text(error)
 							.foregroundStyle(.red)
 							.font(.footnote)
 							.multilineTextAlignment(.center)
-							.padding(.top, 8)
-					}
-					.frame(maxWidth: .infinity, alignment: .center)
-					.padding()
-				} else {
-					EmptyView()
-				}
-				
-				VStack(spacing: 16) {
-					switch model.authFlow  {
-					case .signUp:
-						VStack {
-							HStack {
-								AuthTextField(
-									placeholder: "Your name",
-									keyboardType: .default,
-									textContentType: .name,
-									text: $nameText
-								)
-								
-								AuthTextField(
-									placeholder: "Your surname",
-									keyboardType: .default,
-									textContentType: .familyName,
-									text: $surnameText
-								)
-							}
-						}
-						
-					case .signIn:
-						EmptyView()
+							.frame(maxWidth: .infinity)
+							.padding(.vertical, 10)
 					}
 					
-					
-					AuthTextField(
-						icon: "envelope",
-						placeholder: "Email Address",
-						keyboardType: .emailAddress,
-						textContentType: .emailAddress,
-						text: $emailText
+					AuthFormFields(
+						isSignUp: isSignUp,
+						nameText: $nameText,
+						surnameText: $surnameText,
+						emailText: $emailText,
+						passwordText: $passwordText,
 					)
 					
-					AuthTextField(
-						icon: "lock",
-						placeholder: "Password",
-						isSecure: true,
-						text: $passwordText
-					)
-				}
-				
-				Button {
-					if model.authFlow == .signIn {
-						Task {
-							await model.login(email: emailText, password: passwordText)
-							
-							if let user = model.user {
-								print("Logged in as \(user.email)")
-							}
-						}
-					} else {
-						Task {
-							await model.register(
-								email: emailText,
-								password: passwordText,
-								name: nameText,
-								lastName: surnameText,
-								avatar: avatar
-							)
-							
-							if let user = model.user {
-								print("Logged in as \(user.email)")
-							}
-						}
-					}
-				} label: {
-					Text("Continue with email")
-						.foregroundStyle(.white)
-						.frame(maxWidth: .infinity)
-						.padding()
-						.background(.black.opacity(0.9))
-						.clipShape(RoundedRectangle(cornerRadius: 14))
-				}
-				.padding(.top, 10)
-				
-				HStack(spacing: 12) {
-					Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 1)
-					Text("or").font(.footnote).foregroundStyle(.gray)
-					Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 1)
-				}
-				.padding(.vertical, 12)
-				
-				HStack {
-					SocialAuthButton(icon: .system("apple.logo"))
-					SocialAuthButton(icon: .asset("google"))
-				}
-				.frame(maxWidth: .infinity)
-			}
-			.padding(25)
-			.toolbar {
-				ToolbarItem(placement: .topBarLeading) {
 					Button {
-						dismiss()
+						Task {
+							if model.authFlow == .signIn {
+								await model.login(email: emailText, password: passwordText)
+							} else {
+								await model.register(
+									email: emailText,
+									password: passwordText,
+									name: nameText,
+									lastName: surnameText,
+									avatar: avatar
+								)
+							}
+						}
 					} label: {
-						Image(systemName: "chevron.left")
-							.font(.system(size: 14, weight: .semibold))
-							.foregroundStyle(.gray)
-							.padding(10)
-							.background(.gray.opacity(0.1))
-							.clipShape(Circle())
+						if model.isLoading {
+							ProgressView()
+								.tint(.primary)
+						} else {
+							Text("Continue with email")
+						}
+					}
+					.foregroundStyle(.white)
+					.frame(maxWidth: .infinity)
+					.padding()
+					.background(.black.opacity(model.isLoading ? 0.1 : 0.9))
+					.clipShape(RoundedRectangle(cornerRadius: 14))
+					.padding(.top, 10)
+					.disabled(model.isLoading || !isFormValid)
+					
+					AuthSocialRow()
+				}
+				.padding(25)
+				.toolbar {
+					ToolbarItem(placement: .topBarLeading) {
+						Button { dismiss() } label: {
+							Image(systemName: "chevron.left")
+								.font(.system(size: 14, weight: .semibold))
+								.foregroundStyle(.gray)
+								.padding(10)
+								.background(.gray.opacity(0.1))
+								.clipShape(Circle())
+						}
 					}
 				}
+				.navigationBarBackButtonHidden(true)
 			}
-			.navigationBarBackButtonHidden(true)
 		}
 	}
 }
 
+private struct AuthSocialRow: View, Equatable {
+	static func == (lhs: Self, rhs: Self) -> Bool { true }
+	
+	var body: some View {
+		HStack(spacing: 12) {
+			Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 1)
+			Text("or").font(.footnote).foregroundStyle(.gray)
+			Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 1)
+		}
+		.padding(.vertical, 12)
+		
+		HStack {
+			SocialAuthButton(icon: .system("apple.logo"))
+			SocialAuthButton(icon: .asset("google"))
+		}
+		.frame(maxWidth: .infinity)
+	}
+}
+
+
 #Preview {
-	AuthRootView().environment(AuthViewModel())
+	AuthRootView()
+		.environment(AuthViewModel())
 }

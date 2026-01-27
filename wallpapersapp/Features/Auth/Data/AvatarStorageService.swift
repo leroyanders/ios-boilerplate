@@ -1,7 +1,7 @@
 import FirebaseStorage
 import UIKit
 
-final class AvatarRemoteStore {
+final class AvatarRemoteStore: AvatarRemoteStoreProtocol {
     private let storage = Storage.storage().reference()
 
 	func uploadAvatar(userId: String, image: UIImage) async throws -> String {

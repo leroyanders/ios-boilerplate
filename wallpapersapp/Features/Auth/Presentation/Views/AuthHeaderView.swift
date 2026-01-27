@@ -9,12 +9,12 @@ struct AuthHeaderView: View {
 		VStack(alignment: .center) {
 			if authFlow == .signUp {
 				AuthAvatarPicker(avatarImage: $avatar).padding()
+			} else {
+				Text("Grow together!")
+						.font(.title)
+						.fontWeight(.semibold)
+						.multilineTextAlignment(.center)
 			}
-			
-			Text(authFlow == .signIn ? "Grow together!" : "Let's get started!")
-				.font(.title)
-				.fontWeight(.semibold)
-				.multilineTextAlignment(.center)
 			
 			Text("Join a community where people share experience and support each other.")
 				.foregroundStyle(.black.opacity(0.7))
@@ -23,7 +23,7 @@ struct AuthHeaderView: View {
 				.multilineTextAlignment(.center)
 		}
 		.padding(.top, 10)
-		.padding(.bottom, 30)
+		.padding(.bottom, 10)
 	}
 }
 

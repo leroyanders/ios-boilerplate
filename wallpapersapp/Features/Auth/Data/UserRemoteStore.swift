@@ -1,6 +1,6 @@
 import FirebaseFirestore
 
-final class UserRemoteStore {
+final class UserRemoteStore: UserRemoteStoreProtocol {
     private let db = Firestore.firestore()
 
 	func save(user: AppUser) async throws {
@@ -26,7 +26,10 @@ final class UserRemoteStore {
 
         return AppUser(
             id: doc.documentID,
-            email: data["email"] as? String ?? ""
+            email: data["email"] as? String ?? "",
+			name: data["name"] as? String ?? "",
+			lastName: data["lastName"] as? String ?? "",
+			image: data["image"] as? String ?? ""
         )
     }
 }

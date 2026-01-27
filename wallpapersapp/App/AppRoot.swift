@@ -3,32 +3,43 @@ import SwiftUI
 struct AppRoot: View {
 	@State private var authViewModel = AuthViewModel()
 	@State private var isCheckingSession = true
-
+	
 	var body: some View {
 		Group {
 			if isCheckingSession {
-				ProgressView("Loading").progressViewStyle(.circular)
+				loadingView
 			} else if authViewModel.user == nil {
-				NavigationStack {
-					WelcomeRootView()
-				}
+				WelcomeRootView()
+					.environment(authViewModel)
 			} else {
-				NavigationStack {
-					DiscoveryRootView()
-				}
+				DiscoveryRootView()
+					.environment(authViewModel)
 			}
 		}
-		.environment(authViewModel)
 		.task {
 			await checkSessionIfNeeded()
 		}
 	}
-
+	
+	private var loadingView: some View {
+		ZStack {
+			Color(.systemBackground)
+				.ignoresSafeArea()
+			
+			ProgressView("Loading")
+				.progressViewStyle(CircularProgressViewStyle())
+				.scaleEffect(1.2)
+		}
+	}
+	
 	private func checkSessionIfNeeded() async {
 		guard isCheckingSession else { return }
-		await authViewModel.tryAutoLogin()
+		try? await Task.sleep(for: .milliseconds(300))
 		
-		isCheckingSession = false
+		await authViewModel.tryAutoLogin()
+		await MainActor.run {
+			isCheckingSession = false
+		}
 	}
 }
 

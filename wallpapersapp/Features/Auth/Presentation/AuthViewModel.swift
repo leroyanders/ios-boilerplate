@@ -3,43 +3,30 @@ import SwiftUI
 import Observation
 import FirebaseAuth
 
+@MainActor
 @Observable
 final class AuthViewModel {
 	
-	// MARK: - State
+		// MARK: - State
 	var user: AppUser?
 	var errorMessage: String?
 	var authFlow: AuthFlowEnum = .signIn
 	var isLoading: Bool = false
 	
-	// MARK: - Data layer
-	private let authRemote: AuthRemoteService
-	private let userRemote: UserRemoteStore
-	private let userLocal: UserLocalStore
-	private let avatarRemote: AvatarRemoteStore
-	
-	// MARK: - Init
-	init(
-		authRemote: AuthRemoteService = AuthRemoteService(),
-		userRemote: UserRemoteStore = UserRemoteStore(),
-		userLocal: UserLocalStore = UserLocalStore(),
-		avatarRemote: AvatarRemoteStore = AvatarRemoteStore()
-	) {
-		self.authRemote = authRemote
-		self.userRemote = userRemote
-		self.userLocal = userLocal
-		self.avatarRemote = avatarRemote
-	}
-	
-	// MARK: - Public API
+		// MARK: - Data layer
+	private let authRemote: AuthRemoteService = AuthRemoteService()
+	private let userRemote: UserRemoteStore = UserRemoteStore()
+	private let userLocal: UserLocalStore = UserLocalStore()
+	private let avatarRemote: AvatarRemoteStore = AvatarRemoteStore()
+
 	func tryAutoLogin() async {
 		guard let sessionUser = try? await authRemote.restoreSession() else {
 			user = nil
 			return
 		}
-		
 		await loadFullProfile(for: sessionUser.id)
 	}
+	
 	
 	func login(email: String, password: String) async {
 		await perform {
@@ -77,6 +64,8 @@ final class AuthViewModel {
 			try userLocal.save(user: user)
 			
 			self.user = user
+		} onError: { error in
+			self.handleLoginError(error)
 		}
 	}
 	
@@ -85,7 +74,7 @@ final class AuthViewModel {
 		user = nil
 	}
 	
-	// MARK: - Private helpers
+		// MARK: - Private helpers
 	private func loadFullProfile(for userId: String) async {
 		let fullUser = try? await userRemote.fetchUser(id: userId)
 		if let fullUser {
@@ -98,9 +87,10 @@ final class AuthViewModel {
 		_ action: () async throws -> Void,
 		onError: ((Error) -> Void)? = nil
 	) async {
+		defer { isLoading = false }
+		
 		isLoading = true
 		errorMessage = nil
-		defer { isLoading = false }
 		
 		do {
 			try await action()
@@ -114,35 +104,33 @@ final class AuthViewModel {
 	}
 	
 	private func handleLoginError(_ error: Error) {
-		let nsError = error as NSError
-		
-		if nsError.domain == AuthErrorDomain,
-		   nsError.code == AuthErrorCode.invalidCredential.rawValue {
-			authFlow = .signUp
-			return
+		if let authError = error as? AuthErrorCode {
+			switch authError.code {
+			case .invalidCredential:
+				authFlow = .signUp
+				return
+			default:
+				break
+			}
 		}
 		
 		errorMessage = mapAuthError(error)
 	}
 	
 	private func mapAuthError(_ error: Error) -> String {
-		let nsError = error as NSError
-		
-		guard nsError.domain == AuthErrorDomain else {
-			return "Unexpected error"
+		if let authError = error as? AuthErrorCode {
+			switch authError.code {
+			case .wrongPassword: return "Incorrect password"
+			case .userNotFound: return "Account not found"
+			case .invalidEmail: return "Invalid email format"
+			case .networkError: return "Network connection failed"
+			case .emailAlreadyInUse: return "Email already registered"
+			case .weakPassword: return "Password too weak (min 6 characters)"
+			case .invalidCredential: return "Invalid credentials"
+			default: return "Authentication error. Code: \(authError.code.rawValue)"
+			}
 		}
 		
-		switch nsError.code {
-		case AuthErrorCode.wrongPassword.rawValue:
-			return "Wrong password"
-		case AuthErrorCode.userNotFound.rawValue:
-			return "User not found"
-		case AuthErrorCode.invalidEmail.rawValue:
-			return "Invalid email address"
-		case AuthErrorCode.networkError.rawValue:
-			return "Network error. Try again."
-		default:
-			return "Authentication failed"
-		}
+		return "Authentication failed. Please try again."
 	}
 }
