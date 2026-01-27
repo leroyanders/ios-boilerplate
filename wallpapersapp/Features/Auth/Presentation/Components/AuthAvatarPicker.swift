@@ -1,7 +1,7 @@
 import SwiftUI
 import PhotosUI
 
-struct AvatarPicker: View {
+struct AuthAvatarPicker: View {
     @Binding var avatarImage: UIImage?
 
     @State private var selectedItem: PhotosPickerItem?

@@ -3,7 +3,7 @@ import SwiftUI
 struct WelcomeBottomBarView: View {
     var body: some View {
         VStack(alignment: .leading) {
-			NavigationLink(destination: SignInScreenView()) {
+			NavigationLink(destination: AuthRootView()) {
 				Text("Continue with email")
 					.foregroundStyle(.white)
 					.frame(maxWidth: .infinity)

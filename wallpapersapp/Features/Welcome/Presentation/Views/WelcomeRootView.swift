@@ -1,7 +1,7 @@
 import SwiftUI
 import Foundation
 
-struct WelcomeScreen: View {
+struct WelcomeRootView: View {
 	@State private var page = 0
 	
 	var body: some View {
@@ -24,5 +24,5 @@ struct WelcomeScreen: View {
 }
 
 #Preview {
-	WelcomeScreen().environment(AuthViewModel())
+	WelcomeRootView().environment(AuthViewModel())
 }

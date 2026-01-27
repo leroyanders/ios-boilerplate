@@ -1,6 +1,6 @@
 import FirebaseAuth
 
-final class AuthAPIService {
+final class AuthRemoteService {
 	func register(email: String, password: String, name: String? = nil, lastName: String? = nil) async throws -> AppUser {
 		let result = try await Auth.auth()
 			.createUser(withEmail: email, password: password)

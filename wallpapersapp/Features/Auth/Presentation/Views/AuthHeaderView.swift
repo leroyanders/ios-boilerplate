@@ -1,20 +1,14 @@
 import SwiftUI
 import PhotosUI
 
-struct SignInHeaderView: View {
+struct AuthHeaderView: View {
 	var authFlow: AuthFlowEnum? = .signIn
 	@Binding var avatar: UIImage?
 	
 	var body: some View {
 		VStack(alignment: .center) {
-			if authFlow == .signIn {
-				Image("join")
-					.resizable()
-					.scaledToFit()
-					.frame(maxWidth: 200)
-			} else {
-				AvatarPicker(avatarImage: $avatar)
-							.padding()
+			if authFlow == .signUp {
+				AuthAvatarPicker(avatarImage: $avatar).padding()
 			}
 			
 			Text(authFlow == .signIn ? "Grow together!" : "Let's get started!")
@@ -36,7 +30,7 @@ struct SignInHeaderView: View {
 #Preview {
 	@Previewable @State var avatar: UIImage? = nil
 
-	SignInHeaderView(
+	AuthHeaderView(
 		authFlow: .signIn,
 		avatar: $avatar
 	)

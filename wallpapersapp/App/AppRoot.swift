@@ -7,10 +7,10 @@ struct AppRoot: View {
 	var body: some View {
 		Group {
 			if isCheckingSession {
-				ProgressView("Loading...")
+				ProgressView("Loading").progressViewStyle(.circular)
 			} else if authViewModel.user == nil {
 				NavigationStack {
-					WelcomeScreen()
+					WelcomeRootView()
 				}
 			} else {
 				DiscoveryScreenView()
@@ -18,12 +18,17 @@ struct AppRoot: View {
 		}
 		.environment(authViewModel)
 		.task {
-			await authViewModel.tryAutoLogin()
-			isCheckingSession = false
+			await checkSessionIfNeeded()
 		}
 	}
-}
 
+	private func checkSessionIfNeeded() async {
+		guard isCheckingSession else { return }
+		await authViewModel.tryAutoLogin()
+		
+		isCheckingSession = false
+	}
+}
 
 #Preview {
 	AppRoot()

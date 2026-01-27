@@ -1,12 +1,12 @@
 import CoreData
 
-final class CoreDataUserPersistence: UserPersistenceService {
+final class UserLocalStore: UserPersistenceService {
 	private let context: NSManagedObjectContext
 
 	init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
 		self.context = context
 	}
-	
+
 	func clearTokenFromCoreData() {
 		let request = CDUser.fetchRequest()
 		if let user = try? PersistenceController.shared.container.viewContext.fetch(request).first {
@@ -14,7 +14,7 @@ final class CoreDataUserPersistence: UserPersistenceService {
 			try? PersistenceController.shared.container.viewContext.save()
 		}
 	}
-	
+
 	func loadTokenFromCoreData() -> String? {
 		let request = CDUser.fetchRequest()
 		request.fetchLimit = 1

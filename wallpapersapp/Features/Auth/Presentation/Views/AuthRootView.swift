@@ -1,10 +1,9 @@
 import SwiftUI
 import PhotosUI
 
-struct SignInScreenView: View {
+struct AuthRootView: View {
 	@State var nameText: String = ""
 	@State var surnameText: String = ""
-	
 	@State var emailText: String = ""
 	@State var passwordText: String = ""
 	@State var avatar: UIImage?
@@ -15,8 +14,7 @@ struct SignInScreenView: View {
 	var body: some View {
 		NavigationStack {
 			VStack(alignment: .leading) {
-				SignInHeaderView(authFlow: model.authFlow, avatar: $avatar)
-					.frame(maxWidth: .infinity)
+				AuthHeaderView(authFlow: model.authFlow, avatar: $avatar).frame(maxWidth: .infinity)
 				
 				if let error = model.errorMessage {
 					VStack {
@@ -142,5 +140,5 @@ struct SignInScreenView: View {
 }
 
 #Preview {
-	SignInScreenView().environment(AuthViewModel())
+	AuthRootView().environment(AuthViewModel())
 }

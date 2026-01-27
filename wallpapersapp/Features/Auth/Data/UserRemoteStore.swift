@@ -1,6 +1,6 @@
 import FirebaseFirestore
 
-final class UserFirestoreService {
+final class UserRemoteStore {
     private let db = Firestore.firestore()
 
 	func save(user: AppUser) async throws {
