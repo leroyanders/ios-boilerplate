@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct DiscoveryScreenView: View {
+struct DiscoveryRootView: View {
 	@Environment(AuthViewModel.self) private var model
 	
 	var body: some View {
@@ -17,5 +17,5 @@ struct DiscoveryScreenView: View {
 }
 
 #Preview {
-	DiscoveryScreenView()
+	DiscoveryRootView()
 }

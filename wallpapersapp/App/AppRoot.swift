@@ -13,7 +13,9 @@ struct AppRoot: View {
 					WelcomeRootView()
 				}
 			} else {
-				DiscoveryScreenView()
+				NavigationStack {
+					DiscoveryRootView()
+				}
 			}
 		}
 		.environment(authViewModel)
