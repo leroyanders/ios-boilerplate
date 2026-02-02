@@ -38,3 +38,18 @@ struct AppRoot: View {
 		isCheckingSession = false
 	}
 }
+
+#Preview {
+	let repository = FirebaseAuthRepository(
+		authRemote: AuthRemoteService(),
+		userRemote: UserRemoteStore(),
+		userLocal: UserLocalStore(),
+		avatarRemote: AvatarRemoteStore()
+	)
+
+	let useCase = AuthUseCase(repository: repository)
+	let vm = AuthViewModel(useCase: useCase)
+
+	AppRoot()
+		.environment(vm)
+}
